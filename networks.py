@@ -23,6 +23,8 @@ class Cifar10VGG16:
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.model = self.__build_model()
         self.num_classes = 10
+        self.obversation_space = None
+        self.action_space = None
 
 
     def __build_model(self):
@@ -35,7 +37,7 @@ class Cifar10VGG16:
         model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
         return model
 
-    def get_feature_from_layer(self, name):
+    def get_feature_map(self, name):
         model = Model(inputs=self.model.input, outputs=self.model.get_layer(name).output)
         img = image.load_img('nn.png', target_size=(32, 32))
         x = image.img_to_array(img)
@@ -43,13 +45,10 @@ class Cifar10VGG16:
         x = preprocess_input(x)
         x = model.predict(x)
         x = x.transpose(3, 0, 1, 2).reshape(x.shape[-1], -1) # reshaping the feature the feature map
+        self.obversation_space = np.prod(x)
+        self.action_shape = x[1]
         return x
 
-    def observation_space(self):
-        pass
-
-    def action_space(self):
-        pass
 
     def evaluate(self):
         eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
