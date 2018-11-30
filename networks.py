@@ -7,10 +7,13 @@ from keras import Input
 from keras.optimizers import Adam
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator as IDG
-
+from keras.preprocessing import image
+from keras.applications.vgg16 import preprocess_input
 from kerassurgeon import Surgeon
 
 import os
+import numpy as np
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 class Cifar10VGG16:
@@ -33,7 +36,12 @@ class Cifar10VGG16:
         return model
 
     def get_feature_from_layer(self, name):
-        pass
+        model = Model(inputs=self.model.input, outputs=self.model.get_layer(name).output)
+        img = image.load_img('nn.png', target_size=(32, 32))
+        x = image.img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        x = preprocess_input(x)
+        return model.predict(x)
 
     def observation_space(self):
         pass
@@ -75,4 +83,4 @@ class Cifar10VGG16:
 
 if __name__ == '__main__':
     model = Cifar10VGG16()
-    print(model.train())
+    print(model.get_feature_from_layer('block4_pool'))
