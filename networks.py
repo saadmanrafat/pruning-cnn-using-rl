@@ -46,7 +46,7 @@ class Cifar10VGG16:
         x = model.predict(x)
         x = x.transpose(3, 0, 1, 2).reshape(x.shape[-1], -1) # reshaping the feature the feature map
         self.obversation_space = np.prod(x)
-        self.action_shape = x[1]
+        self.action_shape = x[0]
         return x
 
 
