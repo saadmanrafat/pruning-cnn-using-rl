@@ -14,7 +14,7 @@ from kerassurgeon import Surgeon
 import os
 import numpy as np
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class Cifar10VGG16:
 
@@ -23,7 +23,7 @@ class Cifar10VGG16:
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.model = self.__build_model()
         self.num_classes = 10
-        
+
 
     def __build_model(self):
         input_shape = self.x_train.shape[1:]
@@ -41,7 +41,9 @@ class Cifar10VGG16:
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
-        return model.predict(x)
+        x = model.predict(x)
+        x = x.transpose(3, 0, 1, 2).reshape(x.shape[-1], -1) # reshaping the feature the feature map
+        return x
 
     def observation_space(self):
         pass
@@ -70,7 +72,7 @@ class Cifar10VGG16:
             validation_steps = eval_data_generator.n // eval_data_generator.batch_size)
 
         return results
-        
+
 
 
     def step(self, action):
