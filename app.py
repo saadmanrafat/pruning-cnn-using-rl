@@ -17,3 +17,27 @@ if __name__ == '__main__':
 
     reward = env.step(action)
     print(reward)
+
+    for epsiode in range(5):
+        done = False
+        score = 0
+        env = Cifar10VGG16('block5_conv1')
+        state = evn.get_feature_map()
+        state = np.reshape(state[1,:], [1, env.state_size])
+
+        while not done:
+            action = agent.get_action(state).astype(int)
+            action, reward, state, new_state = env.step(action)
+            agent.append_sample(state, action, reward)
+
+            score += reward
+            state = new_state
+            state = np.reshape(state[1,:], [1, env.state_size])
+
+            if done:
+                agent.train_model()
+
+                if mean_scores_of_10_episodes < something:
+                    sys.exit()
+
+        agent.model.save_weights('./save_model/pruning_agent_{}.h5'.format(episode))
