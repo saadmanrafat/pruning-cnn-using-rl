@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     scores, episodes = [], []
 
-    for epsiode in range(5):
+    for episode in range(5):
         done = False
         score = 0
         env = Cifar10VGG16('block5_conv1')

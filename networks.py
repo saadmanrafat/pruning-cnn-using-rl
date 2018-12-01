@@ -2,14 +2,14 @@ from keras.applications import VGG16
 from keras.models import Model, Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
 from keras.datasets import cifar10
-from keras.engine.topology import get_source_inputs
+
 from keras import Input
 from keras.optimizers import Adam
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator as IDG
 from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input
-from kerassurgeon import Surgeon
+from kerassurgeon.operations import delete_channels
 
 import os
 import math
@@ -40,7 +40,6 @@ class Cifar10VGG16:
         model = Model(input_tensor, prediction)
         model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
         return model
-
 
     def get_feature_map(self, model=None):
         """Returns a feature maps of a specified layers
@@ -86,13 +85,10 @@ class Cifar10VGG16:
 
             Returns: Action, Reward, Current State, New State
         """
-        surgeon = Surgeon(self.model)
         # finding indexes of the all the unimportant feature maps
         action = np.where(action == 0)[0]
         print('Deleting Channels')
-        surgeon.add_job(job = 'delete_channels', layer = self.model.get_layer(self.layer_name), channels = action)
-        new_model = surgeon.operate()
-        new_model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
+        new_model = delete_channels(self.model, layer = self.model.get_layer(self.layer_name), channels = action)
         print('Calulating Rewards')
         reward = self._accuracy_term(new_model) - math.log10(self.action_size/len(action))
         current_state = self.get_feature_map()
