@@ -49,7 +49,6 @@ class Cifar10VGG16:
         return x
 
 
-
     def evaluate(self):
         eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
             horizontal_flip=True).flow(self.x_test, to_categorical(self.y_test, self.num_classes))
@@ -78,7 +77,7 @@ class Cifar10VGG16:
             horizontal_flip=True).flow(self.x_test, to_categorical(self.y_test, self.num_classes), \
             batch_size=32)
 
-        p_star = self.model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
+        p_star = self.model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0] # [0] index to return the loss
         p_hat = other.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
 
         accuracy_term = (self.b - (p_star - p_hat)) // self.b
