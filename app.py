@@ -5,6 +5,8 @@ import numpy as np
 
 if __name__ == '__main__':
 
+    scores, episodes = [], []
+
     for epsiode in range(5):
         done = False
         score = 0
@@ -15,18 +17,19 @@ if __name__ == '__main__':
 
         while not done:
             action = agent.get_action(state).astype(int)
-            action, reward, state, new_state = env.step(action)
+            action, reward, state, done, new_state = env.step(action)
             agent.append_sample(state, action, reward)
 
             score += reward
             state = new_state
             state = np.reshape(state[1,:], [1, env.state_size])
 
-            if done:
-                agent.train_model()
 
-                if mean_scores_of_10_episodes < something:
-                    sys.exit()
+            agent.train_model()
+            scores.append(score)
+            episodes.append(episode)
+            print('Episode {}, Score {}'.format(episode, score))
 
-        agent.model.save_weights('./save_model/pruning_agent_{}.h5'.format(episode))
-        env.model.save_weights('./save_model/pruned_network_{}.h5'.format(episode))
+
+            agent.model.save_weights('./save_model/pruning_agent_{}.h5'.format(episode))
+            env.model.save_weights('./save_model/pruned_network_{}.h5'.format(episode))
