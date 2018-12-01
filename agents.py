@@ -46,6 +46,7 @@ class Agent:
         self.rewards.append(reward)
         self.actions.append(action)
 
+
     def get_action(self, state):
         return self.model.predict(state)[0]
 
