@@ -90,5 +90,4 @@ class Cifar10VGG16:
         new_model = delete_channels(self.model, layer = self.model.get_layer(self.layer_name), channels = action)
         print('Calulating Rewards')
         reward = self._accuracy_term(new_model) - math.log10(self.action_size/len(action))
-        current_state = self.get_feature_map()
-        return action, reward, current_state, True
+        return action, reward

@@ -6,27 +6,26 @@ import numpy as np
 if __name__ == '__main__':
 
     scores, episodes = [], []
+    score = 0
 
-    for episode in range(5):
-        done = False
-        score = 0
+    while True:
+
         env = Cifar10VGG16('block5_conv1')
         state = env.get_feature_map()
         state = np.reshape(state[1,:], [1, env.state_size])
         agent = Agent(env.state_size, env.action_size)
 
-        while not done:
+        for episode in range(5):
             action = agent.get_action(state).astype(int)
-            action, reward, state, done = env.step(action)
+            action, reward = env.step(action)
             agent.append_sample(state, action, reward)
-
             score += reward
-            
-            agent.train_model()
             scores.append(score)
             episodes.append(episode)
             print('Episode {}, Score {}'.format(episode, score))
 
+        agent.train_model()
 
-            agent.model.save_weights('./save_model/pruning_agent.h5'.format(episode))
-            env.model.save_weights('./save_model/pruned_network_{}.h5'.format(episode))
+
+        agent.model.save_weights('./save_model/pruning_agent.h5'.format(episode))
+        env.model.save_weights('./save_model/pruned_network_{}.h5'.format(episode))
