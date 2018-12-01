@@ -27,7 +27,7 @@ class Cifar10VGG16:
         self.b = b
         self.action_size = None
         self.state_size = None
-
+        self.epochs = 2
 
     def __build_model(self):
         """Builds the VGG16 Model
@@ -46,7 +46,6 @@ class Cifar10VGG16:
         """Returns a feature maps of a specified layers
         """
         model = model or self.model
-
         model = Model(inputs=model.input, outputs=model.get_layer(self.layer_name).output)
         img = image.load_img('nn.png', target_size=(32, 32))
         x = image.img_to_array(img)
@@ -66,21 +65,16 @@ class Cifar10VGG16:
         eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
             horizontal_flip=True).flow(self.x_test, to_categorical(self.y_test, self.num_classes), \
             batch_size=32)
-
         train_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
             horizontal_flip=True).flow(self.x_train, to_categorical(self.y_train, self.num_classes), \
             batch_size=32, shuffle=True)
-
         print('Training the optimized model.')
         other.fit_generator(train_data_generator, train_data_generator.n // train_data_generator.batch_size, \
-            epochs=2, validation_data = eval_data_generator, validation_steps = eval_data_generator.n // eval_data_generator.batch_size)
-
+            epochs=self.epochs, validation_data = eval_data_generator, validation_steps = eval_data_generator.n // eval_data_generator.batch_size)
         print('Evaluating the optimized model')
         p_hat = other.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
-
         print('Calculating the accuracy of the base line model')
         p_star = self.model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
-
         print('Calculating the accuracy term')
         accuracy_term = (self.b - (p_star - p_hat)) / self.b
         return accuracy_term
@@ -92,19 +86,15 @@ class Cifar10VGG16:
 
             Returns: Action, Reward, Current State, New State
         """
-
         surgeon = Surgeon(self.model)
+        # finding indexes of the all the unimportant feature maps
         action = np.where(action == 0)[0]
-
-        print('Deleting Channelss')
+        print('Deleting Channels')
         surgeon.add_job(job = 'delete_channels', layer = self.model.get_layer(self.layer_name), channels = action)
         new_model = surgeon.operate()
         new_model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
-
         print('Calulating Rewards')
         reward = self._accuracy_term(new_model) - math.log10(self.action_size/len(action))
-
         current_state = self.get_feature_map()
         new_state = self.get_feature_map(model=new_model)
-
         return action, reward, current_state, new_state
