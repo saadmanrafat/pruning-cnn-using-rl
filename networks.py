@@ -19,12 +19,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class Cifar10VGG16:
 
-    def __init__(self, layer_name=None):
+    def __init__(self, layer_name=None, b = 0.5):
 
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.model = self.__build_model()
         self.num_classes = 10
-        self.layer_name = layer_name or 'conv5_block1'
+        self.layer_name = layer_name or 'block5_conv1'
         self.b = b # hyper parameter
 
 
@@ -92,11 +92,11 @@ class Cifar10VGG16:
         """
         surgeon = Surgeon(self.model)
         action = np.where(action == 0)[0] # finding the indexes where it is 0
-        surgeon.add_job('delete_channels', self.model, self.model.get_layer(self.layer_name), channels=action)
+        surgeon.add_job(job = 'delete_channels', layer = self.model.get_layer(self.layer_name), channels = action)
         new_model = surgeon.operate()
 
-        reward = _accuracy_term(new_model) - math.log10(self.action_size/action)
-        return reward,
+        reward = self._accuracy_term(new_model) - math.log10(self.action_size/action)
+        return reward
 
 
 

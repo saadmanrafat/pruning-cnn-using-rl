@@ -10,9 +10,10 @@ if __name__ == '__main__':
     state_size = state.shape[1]
     agent = Agent(state_size, action_space)
     print(agent.model.summary())
+    print('action_shape: {}, state_size: {}'.format(action_space, state_size))
 
     state = np.reshape(state[1,:], [1, state_size])
     action = agent.get_action(state).astype(int)
-    print(action)
-    print('index')
-    print(np.where(action == 0)[0])
+
+    reward = env.step(action)
+    print(reward)
