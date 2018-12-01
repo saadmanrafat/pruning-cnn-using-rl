@@ -12,19 +12,20 @@ from keras.applications.vgg16 import preprocess_input
 from kerassurgeon import Surgeon
 
 import os
+import math
 import numpy as np
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class Cifar10VGG16:
 
-    def __init__(self):
+    def __init__(self, layer_name=None):
 
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.model = self.__build_model()
         self.num_classes = 10
-        self.obversation_space = None
-        self.action_space = None
+        self.layer_name = layer_name or 'conv5_block1'
+        self.b = b # hyper parameter
 
 
     def __build_model(self):
@@ -44,10 +45,9 @@ class Cifar10VGG16:
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
         x = model.predict(x)
-        x = x.transpose(3, 0, 1, 2).reshape(x.shape[-1], -1) # reshaping the feature the feature map
-        self.obversation_space = np.prod(x)
-        self.action_shape = x[0]
+        x = x.transpose(3, 1, 2, 0).reshape(x.shape[3], -1)
         return x
+
 
 
     def evaluate(self):
@@ -73,12 +73,30 @@ class Cifar10VGG16:
         return results
 
 
+    def _accuracy_term(self, other):
+        eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
+            horizontal_flip=True).flow(self.x_test, to_categorical(self.y_test, self.num_classes), \
+            batch_size=32)
+
+        p_star = self.model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
+        p_hat = other.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
+
+        accuracy_term = (self.b - (p_star - p_hat)) // self.b
+
+
+
 
     def step(self, action):
-        pass
-        # surgeon = Surgeon(self.model)
-        # surgeon.add_job('delete_channels', self.model, layer, channels=action)
-        # return surgeon.operate()
+        """Inputs: the values returned from the neural network an array of {1, 0} values
+            signifying the importance of each feature map
+        """
+        surgeon = Surgeon(self.model)
+        action = np.where(action == 0)[0] # finding the indexes where it is 0
+        surgeon.add_job('delete_channels', self.model, self.model.get_layer(self.layer_name), channels=action)
+        new_model = surgeon.operate()
+
+        reward = _accuracy_term(new_model) - math.log10(self.action_size/action)
+        return reward,
 
 
 
