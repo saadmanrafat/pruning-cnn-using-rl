@@ -44,7 +44,7 @@ class Cifar10VGG16:
     def get_feature_map(self):
         """Returns a feature maps of a specified layers
         """
-        model = Model(inputs=model.input, outputs=model.get_layer(self.layer_name).output)
+        model = Model(inputs=self.model.input, outputs=self.model.get_layer(self.layer_name).output)
         img = image.load_img('nn.png', target_size=(32, 32))
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
