@@ -92,5 +92,4 @@ class Cifar10VGG16:
         print('Calulating Rewards')
         reward = self._accuracy_term(new_model) - math.log10(self.action_size/len(action))
         current_state = self.get_feature_map()
-        new_state = self.get_feature_map(model=new_model)
-        return action, reward, current_state, True, new_state
+        return action, reward, current_state, True

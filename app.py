@@ -17,14 +17,11 @@ if __name__ == '__main__':
 
         while not done:
             action = agent.get_action(state).astype(int)
-            action, reward, state, done, new_state = env.step(action)
+            action, reward, state, done = env.step(action)
             agent.append_sample(state, action, reward)
 
             score += reward
-            state = new_state
-            state = np.reshape(state[1,:], [1, env.state_size])
-
-
+            
             agent.train_model()
             scores.append(score)
             episodes.append(episode)
