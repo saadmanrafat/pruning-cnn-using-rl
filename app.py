@@ -31,5 +31,5 @@ if __name__ == '__main__':
             print('Episode {}, Score {}'.format(episode, score))
 
 
-            agent.model.save_weights('./save_model/pruning_agent_{}.h5'.format(episode))
+            agent.model.save_weights('./save_model/pruning_agent.h5'.format(episode))
             env.model.save_weights('./save_model/pruned_network_{}.h5'.format(episode))

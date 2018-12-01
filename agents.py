@@ -1,12 +1,13 @@
-import sys
-import gym
-import numpy as np
 from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from keras.models import Sequential
 from keras.optimizers import Adam
 from keras import Input
-import numpy as np
 
+import numpy as np
+import sys
+import gym
+import numpy as np
+import os
 
 class Agent:
 
@@ -15,8 +16,12 @@ class Agent:
         self.action_size = action_size
         self.discount_factor = 0.99
         self.learning_rate = 0.01
-        self.model = self._build_model()
         self.states, self.actions, self.rewards = [], [], []
+        self.model = self._build_model()
+
+        if os.path.exists('./save_model/pruning_agent.h5'):
+            print('Loading Previous Agent')
+            self.model.load_weights('./save_model/pruning_agent.h5')
 
 
     def _build_model(self):
