@@ -41,10 +41,9 @@ class Cifar10VGG16:
         model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
         return model
 
-    def get_feature_map(self, model=None):
+    def get_feature_map(self):
         """Returns a feature maps of a specified layers
         """
-        model = model or self.model
         model = Model(inputs=model.input, outputs=model.get_layer(self.layer_name).output)
         img = image.load_img('nn.png', target_size=(32, 32))
         x = image.img_to_array(img)
