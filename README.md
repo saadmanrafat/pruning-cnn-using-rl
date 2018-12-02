@@ -4,7 +4,7 @@ Implementation of the paper [Learning to Prune Filters in Convolutional Neural N
 ## Installation
 
 ```
-> git clone https://github.com/saadmanrafat/Pruning-CNN-Filters-with-RL
+> git clone https://github.com/saadmanrafat/pruning-cnn-using-rl
 > cd into the directory 
 > pip install -r requirements.txt
 
