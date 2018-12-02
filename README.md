@@ -10,7 +10,7 @@ Implementation of the paper [Learning to Prune Filters in Convolutional Neural N
 
 ```
 
-## Benchemarks
+## Benchmarks
 Todo
 
 ## Examples
