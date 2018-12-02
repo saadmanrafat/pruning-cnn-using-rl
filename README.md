@@ -1,4 +1,4 @@
-# Pruning CNNs with Reinforment Learning
+# Pruning CNNs using Reinforcement Learning
 Implementation of the paper [Learning to Prune Filters in Convolutional Neural Networks](https://arxiv.org/pdf/1801.07365.pdf)
 
 ## Installation
