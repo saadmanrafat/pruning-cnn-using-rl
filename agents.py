@@ -79,5 +79,5 @@ class Agent:
             update_inputs[i] = self.states[i]
             advantages[i][self.actions[i]] = discounted_rewards[i]
 
-        self.model.fit(update_inputs, advantages, epochs=3, verbose=0)
+        self.model.fit(update_inputs, advantages, epochs=3, verbose=1)
         self.states, self.actions, self.rewards = [], [], []

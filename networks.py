@@ -88,6 +88,7 @@ class Cifar10VGG16:
         action = np.where(action == 0)[0]
         print('Deleting Channels')
         new_model = delete_channels(self.model, layer = self.model.get_layer(self.layer_name), channels = action)
+        new_model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
         print('Calulating Rewards')
         reward = self._accuracy_term(new_model) - math.log10(self.action_size/len(action))
         return action, reward
