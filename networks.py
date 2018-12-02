@@ -1,6 +1,6 @@
 from keras.applications import VGG16
-from keras.models import Model, Sequential
-from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten
+from keras.models import Model
+from keras.layers import Dense, Flatten
 from keras.datasets import cifar10
 
 from keras import Input
@@ -17,9 +17,10 @@ import numpy as np
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+
 class Cifar10VGG16:
 
-    def __init__(self, layer_name = None, b = 0.5):
+    def __init__(self, layer_name=None, b=0.5):
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.model = self.__build_model()
         self.num_classes = 10
@@ -33,8 +34,8 @@ class Cifar10VGG16:
         """Builds the VGG16 Model
         """
         input_shape = self.x_train.shape[1:]
-        input_tensor = Input(shape=(input_shape))
-        vgg = VGG16(include_top = False, input_tensor = input_tensor, weights='imagenet')
+        input_tensor = Input(shape=input_shape)
+        vgg = VGG16(include_top=False, input_tensor=input_tensor, weights='imagenet')
         flatten = Flatten(name='Flatten')(vgg.output)
         prediction = Dense(10, activation='softmax')(flatten)
         model = Model(input_tensor, prediction)
@@ -54,21 +55,22 @@ class Cifar10VGG16:
         self.action_size, self.state_size = x.shape
         return x
 
-
     def _accuracy_term(self, other):
         """Compares the baseline model with the newly optimized model
 
         Returns: The accuracy term.
         """
-        eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
-            horizontal_flip=True).flow(self.x_test, to_categorical(self.y_test, self.num_classes), \
-            batch_size=32)
-        train_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, \
-            horizontal_flip=True).flow(self.x_train, to_categorical(self.y_train, self.num_classes), \
-            batch_size=32, shuffle=True)
+        eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, horizontal_flip=True) \
+            .flow(self.x_test, to_categorical(self.y_test, self.num_classes), batch_size=32)
+
+        train_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, horizontal_flip=True) \
+            .flow(self.x_train, to_categorical(self.y_train, self.num_classes), batch_size=32, shuffle=True)
+
         print('Training the optimized model.')
-        other.fit_generator(train_data_generator, train_data_generator.n // train_data_generator.batch_size, \
-            epochs=self.epochs, validation_data = eval_data_generator, validation_steps = eval_data_generator.n // eval_data_generator.batch_size)
+        other.fit_generator(train_data_generator, train_data_generator.n // train_data_generator.batch_size,
+                            epochs=self.epochs, validation_data=eval_data_generator,
+                            validation_steps=eval_data_generator.n // eval_data_generator.batch_size)
+
         print('Evaluating the optimized model')
         p_hat = other.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
         print('Calculating the accuracy of the base line model')
@@ -77,12 +79,11 @@ class Cifar10VGG16:
         accuracy_term = (self.b - (p_star - p_hat)) / self.b
         return accuracy_term
 
-
     def step(self, action):
-        """Inputs: the values returned from the neural network an array of {1, 0} values
+        """Input: the values returned from the neural network an array of {1, 0} values
             signifying the importance of each feature map
 
-            Returns: Action, Reward, Current State, New State
+            Returns: Action, Reward
         """
         # finding indexes of the all the unimportant feature maps
         action = np.where(action == 0)[0]

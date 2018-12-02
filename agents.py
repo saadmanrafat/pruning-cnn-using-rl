@@ -1,13 +1,9 @@
 from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from keras.models import Sequential
 from keras.optimizers import Adam
-from keras import Input
-
-import numpy as np
-import sys
-import gym
 import numpy as np
 import os
+
 
 class Agent:
 
@@ -22,7 +18,6 @@ class Agent:
         if os.path.exists('./save_model/pruning_agent.h5'):
             print('Loading Previous Agent')
             self.model.load_weights('./save_model/pruning_agent.h5')
-
 
     def _build_model(self):
         model = Sequential()
@@ -51,7 +46,6 @@ class Agent:
         self.rewards.append(reward)
         self.actions.append(action)
 
-
     def get_action(self, state):
         action = self.model.predict(state)[0]
         np.random.shuffle(action)
@@ -64,7 +58,6 @@ class Agent:
             running_add = running_add * self.discount_factor + rewards[t]
             discounted_rewards[t] = running_add
         return discounted_rewards
-
 
     def train_model(self):
         episode_length = len(self.states)

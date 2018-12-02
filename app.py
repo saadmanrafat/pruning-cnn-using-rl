@@ -1,10 +1,8 @@
 from networks import Cifar10VGG16
 from agents import Agent
-import gym
 import numpy as np
 
 if __name__ == '__main__':
-
 
     while True:
 
@@ -19,4 +17,4 @@ if __name__ == '__main__':
             agent.append_sample(state, action, reward)
 
         agent.train_model()
-        agent.model.save_weights('./save_model/pruning_agent.h5'.format(episode))
+        agent.model.save_weights('./save_model/pruning_agent.h5')
