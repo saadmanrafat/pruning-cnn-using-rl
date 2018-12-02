@@ -53,8 +53,9 @@ class Agent:
 
 
     def get_action(self, state):
-        return self.model.predict(state)[0]
-
+        action = self.model.predict(state)[0]
+        np.random.shuffle(action)
+        return action
 
     def discount_rewards(self, rewards):
         discounted_rewards = np.zeros_like(rewards)
