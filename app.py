@@ -1,8 +1,10 @@
-from networks import Cifar10VGG16
+from environments import Cifar10VGG16
 from agents import Agent
 import numpy as np
 
 if __name__ == '__main__':
+
+
 
     while True:
 

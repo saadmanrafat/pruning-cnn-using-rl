@@ -5,11 +5,8 @@ from keras.datasets import cifar10
 
 from keras import Input
 from keras.optimizers import Adam
-from keras.utils import to_categorical
-from keras.preprocessing.image import ImageDataGenerator as IDG
-from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
 from kerassurgeon.operations import delete_channels
+from utils import data_generator
 
 import os
 import math
@@ -20,15 +17,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class Cifar10VGG16:
 
-    def __init__(self, layer_name=None, b=0.5):
+    def __init__(self, b=0.5):
         (self.x_train, self.y_train), (self.x_test, self.y_test) = cifar10.load_data()
         self.model = self.__build_model()
         self.num_classes = 10
-        self.layer_name = layer_name or 'block5_conv1'
         self.b = b
         self.action_size = None
         self.state_size = None
         self.epochs = 2
+        self.base_model_accuracy = None
 
     def __build_model(self):
         """Builds the VGG16 Model
@@ -42,41 +39,31 @@ class Cifar10VGG16:
         model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
         return model
 
-    def get_feature_map(self):
-        """Returns a feature maps of a specified layers
+    def get(self, layer_name):
+        """Returns a filters of a specified layers
         """
-        model = Model(inputs=self.model.input, outputs=self.model.get_layer(self.layer_name).output)
-        img = image.load_img('nn.png', target_size=(32, 32))
-        x = image.img_to_array(img)
-        x = np.expand_dims(x, axis=0)
-        x = preprocess_input(x)
-        x = model.predict(x)
-        x = x.transpose(3, 1, 2, 0).reshape(x.shape[3], -1)
+        x = self.model.get_layer(layer_name).get_weights()[0]
+        x = x.reshape(x.shape[0], -1)
         self.action_size, self.state_size = x.shape
-        return x
+        return self.action_size, self.state_size
 
-    def _accuracy_term(self, other):
+    def _accuracy_term(self, new_model):
         """Compares the baseline model with the newly optimized model
 
         Returns: The accuracy term.
         """
-        eval_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, horizontal_flip=True) \
-            .flow(self.x_test, to_categorical(self.y_test, self.num_classes), batch_size=32)
-
-        train_data_generator = IDG(rescale=1. / 255, shear_range=0.2, zoom_range=0.2, horizontal_flip=True) \
-            .flow(self.x_train, to_categorical(self.y_train, self.num_classes), batch_size=32, shuffle=True)
-
-        print('Training the optimized model.')
-        other.fit_generator(train_data_generator, train_data_generator.n // train_data_generator.batch_size,
-                            epochs=self.epochs, validation_data=eval_data_generator,
-                            validation_steps=eval_data_generator.n // eval_data_generator.batch_size)
-
-        print('Evaluating the optimized model')
-        p_hat = other.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
-        print('Calculating the accuracy of the base line model')
-        p_star = self.model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
+        train_data_generator = data_generator(self.x_train, self.y_train, self.num_classes)
+        eval_data_generator = data_generator(self.x_test, self.y_test, self.num_classes)
+        train_steps = train_data_generator.n // train_data_generator.batch_size
+        validation_steps = eval_data_generator.n // eval_data_generator.batch_size
+        new_model.fit_generator(generator=train_data_generator, steps_per_epoch=train_steps, epochs=self.epochs,
+                                validation_data=eval_data_generator, validation_steps = validation_steps)
+        p_hat = new_model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose=1)[0]
+        if not self.base_model_accuracy:
+            print('Calculating the accuracy of the base line model')
+            self.base_model_accuracy = self.model.evaluate_generator(eval_data_generator, eval_data_generator.n, verbose = 1)[0]
         print('Calculating the accuracy term')
-        accuracy_term = (self.b - (p_star - p_hat)) / self.b
+        accuracy_term = (self.b - (self.base_model_accuracy - p_hat)) / self.b
         return accuracy_term
 
     def step(self, action):
@@ -87,9 +74,7 @@ class Cifar10VGG16:
         """
         # finding indexes of the all the unimportant feature maps
         action = np.where(action == 0)[0]
-        print('Deleting Channels')
         new_model = delete_channels(self.model, layer = self.model.get_layer(self.layer_name), channels = action)
         new_model.compile(loss="binary_crossentropy", optimizer=Adam(lr=0.01), metrics=['accuracy'])
-        print('Calulating Rewards')
         reward = self._accuracy_term(new_model) - math.log10(self.action_size/len(action))
         return action, reward

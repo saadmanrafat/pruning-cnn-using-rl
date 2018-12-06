@@ -15,13 +15,8 @@ class Agent:
         self.states, self.actions, self.rewards = [], [], []
         self.model = self._build_model()
 
-        if os.path.exists('./save_model/pruning_agent.h5'):
-            print('Loading Previous Agent')
-            self.model.load_weights('./save_model/pruning_agent.h5')
-
     def _build_model(self):
         model = Sequential()
-
         if self.state_size > 16:
             model.add(Conv2D(32, (7, 7), activation='relu', input_shape=self.state_size))
             model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -35,10 +30,15 @@ class Agent:
             model.add(Dense(24, activation='relu'))
             model.add(Dense(24, activation='relu'))
         else:
-            model.add(Dense(256, activation='relu', input_shape=(self.state_size,), name='input_layer'))
-            model.add(Dense(256, activation='relu'))
-            model.add(Dense(self.action_size, activation='sigmoid'))
-            model.compile(loss="categorical_crossentropy", optimizer=Adam(lr=self.learning_rate), metrics=['accuracy'])
+            model.add(Dense(24, activation='relu', input_shape=(self.state_size,), name='input_layer'))
+            model.add(Dense(24, activation='relu'))
+
+        model.add(Dense(self.action_size, activation='sigmoid'))
+        model.compile(loss="categorical_crossentropy", optimizer=Adam(lr=self.learning_rate), metrics=['accuracy'])
+
+        if os.path.exists('./save_model/pruning_agent.h5'):
+            self.model.load_weights('./save_model/pruning_agent.h5')
+
         return model
 
     def append_sample(self, state, action, reward):
@@ -48,7 +48,6 @@ class Agent:
 
     def get_action(self, state):
         action = self.model.predict(state)[0]
-        np.random.shuffle(action)
         return action
 
     def discount_rewards(self, rewards):
@@ -71,6 +70,5 @@ class Agent:
         for i in range(episode_length):
             update_inputs[i] = self.states[i]
             advantages[i][self.actions[i]] = discounted_rewards[i]
-
         self.model.fit(update_inputs, advantages, epochs=3, verbose=1)
         self.states, self.actions, self.rewards = [], [], []
