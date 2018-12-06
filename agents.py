@@ -1,5 +1,6 @@
 from keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from keras.models import Sequential
+from keras import Input
 from keras.optimizers import Adam
 import numpy as np
 import os
@@ -17,22 +18,17 @@ class Agent:
 
     def _build_model(self):
         model = Sequential()
-        if self.state_size > 16:
-            model.add(Conv2D(32, (7, 7), activation='relu', input_shape=self.state_size))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Conv2D(64, (7, 7), activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Conv2D(64, (7, 7), activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Conv2D(64, (7, 7), activation='relu'))
-            model.add(MaxPooling2D(pool_size=(2, 2)))
-            model.add(Flatten())
-            model.add(Dense(24, activation='relu'))
-            model.add(Dense(24, activation='relu'))
-        else:
-            model.add(Dense(24, activation='relu', input_shape=(self.state_size,), name='input_layer'))
-            model.add(Dense(24, activation='relu'))
-
+        model.add(Conv2D(32, (7, 7), activation='relu', input_shape=self.state_size, data_format="channels_first"))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(64, (7, 7), activation='relu', data_format="channels_first"))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(64, (7, 7), activation='relu', data_format="channels_first"))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(64, (7, 7), activation='relu', data_format="channels_first"))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Flatten())
+        model.add(Dense(24, activation='relu'))
+        model.add(Dense(24, activation='relu'))
         model.add(Dense(self.action_size, activation='sigmoid'))
         model.compile(loss="categorical_crossentropy", optimizer=Adam(lr=self.learning_rate), metrics=['accuracy'])
 
@@ -70,5 +66,6 @@ class Agent:
         for i in range(episode_length):
             update_inputs[i] = self.states[i]
             advantages[i][self.actions[i]] = discounted_rewards[i]
+
         self.model.fit(update_inputs, advantages, epochs=3, verbose=1)
         self.states, self.actions, self.rewards = [], [], []
